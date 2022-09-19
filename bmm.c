@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <mpi.h>
 #include "gen_matrix.h"
 #include "my_malloc.h"
 
@@ -33,9 +34,12 @@ void print_matrix(double *result, int dim_size) {
 }
 
 int main(int argc, char *argv[]) {
-    double **r;
-    double **result;
-    int i;
+    MPI_Init(&argc, &argv);
+
+    double* a[2];
+    double* b[2];
+    double* result[2];
+    int rankme, rankleft, rankup, rankright, rankdown;
     int num_arg_matrices;
 
     if (argc != 4) {
@@ -47,14 +51,28 @@ int main(int argc, char *argv[]) {
     matrix_dimension_size = atoi(argv[3]);
     num_arg_matrices = init_gen_sub_matrix(test_set);
 
+    //stolen from https://web.cels.anl.gov/~thakur/sc16-mpi-tutorial/slides.pdf
+    int p;
+    int dims[2] = {0};
+    MPI_Comm_size(MPI_COMM_WORLD, &p);
+    MPI_Dims_create(p, 2, dims);
+    int periods[2] = {1,1};
+    MPI_Comm topocomm;
+    MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 0, &topocomm);
+
+    int each_matrixdimsize = matrix_dimension_size /
+
+    MPI_Cart_create(comm_old, 2, const int dims[],
+    const int periods[], int reorder, MPI_Comm *comm_cart);
     // allocate arrays
-    r = (double **) my_malloc(sizeof(double *) * num_arg_matrices);
-    result = (double **) my_malloc(sizeof(double *) * 2);
+    for(int i = 0; i < 2; ++i) {
+        a[i] = (double *)
+    }
     result[0] = (double *) my_calloc(sizeof(double), matrix_dimension_size * matrix_dimension_size);
     result[1] = (double *) my_calloc(sizeof(double), matrix_dimension_size * matrix_dimension_size);
 
     // get sub matrices
-    for (i = 0; i < num_arg_matrices; ++i) {
+    for (int i = 0; i < num_arg_matrices; ++i) {
         r[i] = (double *) my_malloc(sizeof(double) * matrix_dimension_size * matrix_dimension_size);
         if (gen_sub_matrix(0, test_set, i, r[i], 0, matrix_dimension_size - 1, 1, 0, matrix_dimension_size - 1, 1, 1) ==
             NULL) {
@@ -90,4 +108,3 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
-
