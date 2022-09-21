@@ -40,6 +40,16 @@ double matrix_sum(const double *const __restrict a, // column major
     return accum;
 }
 
+int calc_dims(const int dims[2]) {
+    int total = dims[0] * dims[1];
+    for (int i = 0; i < dims[0]; ++i) {
+        if (i * i < total) {
+            return i;
+        }
+    }
+    return 1;
+}
+
 void print_matrix(double *result, int dim_size) {
     int x, y;
     for (y = 0; y < dim_size; ++y) {
@@ -79,8 +89,7 @@ int main(int argc, char *argv[]) {
         printf("dims %i %i\n", dims[0], dims[1]);
     }
     // end debug
-
-    dims[0] = dims[1]; // this makes it so it is guaranteed to be square
+    dims[0] = dims[1] = calc_dims(dims); // this makes it so it is guaranteed to be square
     int dim = dims[0];
     int periods[2] = {1, 1};
     MPI_Comm topocomm;
