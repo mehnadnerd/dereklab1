@@ -165,6 +165,7 @@ int main(int argc, char *argv[]) {
         }
         for (int iteration = 0; iteration < dim; ++iteration) {
             printf("rank %i iteration %i\n", rankme, iteration);
+            fflush(stdout);
             // start to send/receive
             MPI_Ibsend(au, each_matrixsize * each_matrixsize, MPI_DOUBLE,
                        rankright, xtag, topocomm, rightsend);
