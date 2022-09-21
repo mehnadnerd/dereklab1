@@ -92,6 +92,10 @@ int main(int argc, char *argv[]) {
     dims[0] = dims[1] = calc_dims(dims); // this makes it so it is guaranteed to be square
     int dim = dims[0];
     int periods[2] = {1, 1};
+#ifdef DEBUG
+    printf("precarted\n");
+    fflush(stdout);
+#endif
     MPI_Comm topocomm;
     MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &topocomm);
     if (topocomm == MPI_COMM_NULL) {
