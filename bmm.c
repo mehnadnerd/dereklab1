@@ -42,7 +42,7 @@ double matrix_sum(const double *const __restrict a, // column major
 
 int calc_dims(const int dims[2]) {
     int total = dims[0] * dims[1];
-    for (int i = 0; i < dims[0]; ++i) {
+    for (int i = dims[0]; i >= 0; --i) {
         if (i * i < total) {
             return i;
         }
