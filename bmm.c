@@ -99,6 +99,10 @@ int main(int argc, char *argv[]) {
         printf("Node at rank %i is unused\n", rankme);
         exit(0);
     }
+#ifdef DEBUG
+    printf("carted one\n");
+    fflush(stdout);
+#endif
     MPI_Comm_rank(topocomm, &rankme);
     MPI_Cart_shift(topocomm, 0, 1, &rankme, &rankdown);
     MPI_Cart_shift(topocomm, 0, -1, &rankme, &rankup);
