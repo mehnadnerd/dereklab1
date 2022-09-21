@@ -89,8 +89,9 @@ int main(int argc, char *argv[]) {
         printf("dims %i %i\n", dims[0], dims[1]);
     }
     // end debug
-    dims[0] = dims[1] = calc_dims(dims); // this makes it so it is guaranteed to be square
-    int dim = dims[0];
+    int dim = calc_dims(dims); // this makes it so it is guaranteed to be square
+    dims[0] = dim;
+    dims[1] = dim;
     int periods[2] = {1, 1};
 #ifdef DEBUG
     printf("precarted %i\n", dim);
