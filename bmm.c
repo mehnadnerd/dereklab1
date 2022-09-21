@@ -102,7 +102,6 @@ int main(int argc, char *argv[]) {
     if (topocomm == MPI_COMM_NULL) {
         MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
         printf("Node at rank %i is unused\n", rankme);
-        exit(0);
     }
 #ifdef DEBUG
     printf("carted one\n");
