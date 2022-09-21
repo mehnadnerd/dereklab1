@@ -73,6 +73,13 @@ int main(int argc, char *argv[]) {
     int coords[2] = {0};
     MPI_Comm_size(MPI_COMM_WORLD, &p);
     MPI_Dims_create(p, 2, dims);
+    // debug
+    MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
+    if (rankme == 0) {
+        printf("dims %i %i\n", dims[0], dims[1]);
+    }
+    // end debug
+
     dims[0] = dims[1]; // this makes it so it is guaranteed to be square
     int dim = dims[0];
     int periods[2] = {1, 1};
