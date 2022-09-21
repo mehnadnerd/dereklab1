@@ -142,6 +142,10 @@ int main(int argc, char *argv[]) {
     bu = matrices[2];
     bi = matrices[3];
     o = matrices[4];
+    if (au == NULL || ai == NULL || bu == NULL || bi == NULL || o == NULL) {
+        printf("mem failed\n");
+        exit(1);
+    }
 
     // get first two
     if (gen_sub_matrix(rankme, test_set, 0, au,
@@ -160,6 +164,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         for (int iteration = 0; iteration < dim; ++iteration) {
+            printf("rank %i iteration %i\n", rankme, iteration);
             // start to send/receive
             MPI_Ibsend(au, each_matrixsize * each_matrixsize, MPI_DOUBLE,
                        rankright, xtag, topocomm, rightsend);
