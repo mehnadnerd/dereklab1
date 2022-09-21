@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     int dim = dims[0];
     int periods[2] = {1, 1};
 #ifdef DEBUG
-    printf("precarted\n");
+    printf("precarted %i\n", dim);
     fflush(stdout);
 #endif
     MPI_Comm topocomm;
