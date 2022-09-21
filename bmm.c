@@ -106,6 +106,10 @@ int main(int argc, char *argv[]) {
     MPI_Cart_shift(topocomm, 1, -1, &rankme, &rankleft);
 
     MPI_Cart_coords(topocomm, rankme, 2, coords);
+#ifdef DEBUG
+    printf("mpi carted\n");
+    fflush(stdout);
+#endif
 
     MPI_Datatype dbl = MPI_DOUBLE;
     int xtag = 0xff;
@@ -137,6 +141,10 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 5; ++i) {
         matrices[i] = (double *) my_calloc(each_matrixsize * each_matrixsize, sizeof(double));
     }
+#ifdef DEBUG
+    printf("alloced\n");
+    fflush(stdout);
+#endif
     au = matrices[0];
     ai = matrices[1];
     bu = matrices[2];
@@ -164,8 +172,10 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         for (int iteration = 0; iteration < dim; ++iteration) {
+#ifdef DEBUG
             printf("rank %i iteration %i\n", rankme, iteration);
             fflush(stdout);
+#endif
             // start to send/receive
             MPI_Ibsend(au, each_matrixsize * each_matrixsize, MPI_DOUBLE,
                        rankright, xtag, topocomm, rightsend);
