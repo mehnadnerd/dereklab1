@@ -57,7 +57,7 @@ void mm_kernel_accum(
 
 double matrix_sum(const double *const __restrict a, // row major
                   const int xdim_size, const int ydim_size) {
-    double accum;
+    double accum = 0.0;
     int x, y;
     for (y = 0; y < ydim_size; ++y) {
         for (x = 0; x < xdim_size; ++x) {
@@ -194,7 +194,9 @@ int main(int argc, char *argv[]) {
             debug_print_matrix(au, xdim_size, ydim_size, rankme);
             printf("Begin printb for %i\n", rankme);
             debug_print_matrix(bu, xdim_size, ydim_size, rankme);
-            mm_kernel_accum(o, au, bu, xdim_size, ydim_size, iteration, coords[0]);
+            mm_kernel_accum(o, au, bu, xdim_size, ydim_size, (iteration + coords[0]) % dims[0], coords[0]);
+            printf("Begin printo for %i\n", rankme);
+            debug_print_matrix(o, xdim_size, ydim_size, rankme);
 
             // finish send/receive
             MPI_Wait(&rightsend, MPI_STATUS_IGNORE);
@@ -210,20 +212,21 @@ int main(int argc, char *argv[]) {
         debug_print_matrix(au, xdim_size, ydim_size, rankme);
     }
     o = au;
+    printf("Begin final print for %i\n", rankme);
+    debug_print_matrix(o, xdim_size, ydim_size, rankme);
     double accum = matrix_sum(o, xdim_size, ydim_size);
-    printf("%i %f\n", rankme, accum);
+    printf("%i local sum %f\n", rankme, accum);
     int c[1] = {0};
     MPI_Cart_rank(topocomm, c, &rankmonarch);
-    MPI_Reduce(o, ai, matsize,
-                   MPI_DOUBLE, MPI_SUM, rankmonarch, topocomm);
-    accum = matrix_sum(ai, xdim_size, ydim_size);
+    accum = rankme;
+    double totalaccum;
+    printf("rme %i rm %i\n", rankme, rankmonarch);
+    MPI_Reduce(&accum, &totalaccum, 1, MPI_DOUBLE, MPI_MAX, rankmonarch, topocomm);
     if (ammonarch) {
-        printf("Reduce sum %f\n", accum);
+        printf("Reduce sum %f\n", totalaccum);
     } else {
         printf("I'm done %i\n", rankme);
     }
-    printf("Begin final print for %i\n", rankme);
-    debug_print_matrix(o, xdim_size, ydim_size, rankme);
     MPI_Finalize();
     return 0;
 }
