@@ -221,7 +221,7 @@ int main(int argc, char *argv[]) {
                 int c[1] = {i};
                 MPI_Cart_rank(topocomm, c, &rankmonarch);
 #ifdef DEBUG
-                printf("monarch receiving %i from %i", rankme, rankmonarch);
+                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
 #endif
                 MPI_Recv(ai, matsize, MPI_DOUBLE,
@@ -235,7 +235,7 @@ int main(int argc, char *argv[]) {
                 int c[1] = {i};
                 MPI_Cart_rank(topocomm, c, &rankmonarch);
 #ifdef DEBUG
-                printf("monarch receiving %i from %i", rankme, rankmonarch);
+                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
 #endif
                 MPI_Recv(&tmpdouble, 1, MPI_DOUBLE,
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
         int c[1] = {0};
         MPI_Cart_rank(topocomm, c, &rankmonarch);
 #ifdef DEBUG
-        printf("sending to monarch %i from %i", rankmonarch, rankme);
+        printf("sending to monarch %i from %i\n", rankmonarch, rankme);
         fflush(stdout);
 #endif
         if (debug_perf == 0) {
