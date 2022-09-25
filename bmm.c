@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 #endif
         }
         // dummy send to stop it from finishing
-        MPI_Send(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm);
+        //MPI_Send(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm);
     }
     return 0;
 }
