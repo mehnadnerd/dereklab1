@@ -183,7 +183,7 @@ int main(int argc, char *argv[]) {
         }
         for (int iteration = 0; iteration < dims[0]; ++iteration) {
 #ifdef DEBUG
-            printf("rank %i iteration %i\n", rankme, iteration);
+            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
             fflush(stdout);
 #endif
             // start to send/receive
