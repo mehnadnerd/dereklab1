@@ -93,20 +93,20 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
     // end debug
     int periods[1] = {1};
-#ifdef DEBUG
-    printf("precarted %i\n", dims[0]);
-    fflush(stdout);
-#endif
+//#ifdef DEBUG
+//    printf("precarted %i\n", dims[0]);
+//    fflush(stdout);
+//#endif
     MPI_Comm topocomm;
     MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, 1, &topocomm);
     if (topocomm == MPI_COMM_NULL) {
         MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
         printf("Node at rank %i is unused\n", rankme);
     }
-#ifdef DEBUG
-    printf("carted one\n");
-    fflush(stdout);
-#endif
+//#ifdef DEBUG
+//    printf("carted one\n");
+//    fflush(stdout);
+//#endif
     MPI_Comm_rank(topocomm, &rankme);
     MPI_Cart_shift(topocomm, 0, 1, &rankme, &rankright);
     MPI_Cart_shift(topocomm, 0, -1, &rankme, &rankleft);
@@ -114,19 +114,19 @@ int main(int argc, char *argv[]) {
     //MPI_Cart_shift(topocomm, 1, -1, &rankme, &rankdown);
 
     MPI_Cart_coords(topocomm, rankme, 1, coords);
-#ifdef DEBUG
-    printf("mpi carted\n");
-    fflush(stdout);
-#endif
+//#ifdef DEBUG
+//    printf("mpi carted\n");
+//    fflush(stdout);
+//#endif
 
     MPI_Datatype dbl = MPI_DOUBLE;
     int xtag = 0xff;
     //int ytag = 0xf00f;
     int endtag = 0xbeef;
-    MPI_Request *rightsend;
-    //MPI_Request *downsend;
-    MPI_Request *leftrecv;
-    //MPI_Request *uprecv;
+    MPI_Request rightsend;
+    //MPI_Request downsend;
+    MPI_Request leftrecv;
+    //MPI_Request uprecv;
 
     int xdim_size = matrix_dimension_size;
     int ydim_size = matrix_dimension_size / dims[0];
@@ -151,10 +151,10 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 5; ++i) {
         matrices[i] = (double *) my_calloc(matsize, sizeof(double));
     }
-#ifdef DEBUG
-    printf("alloced\n");
-    fflush(stdout);
-#endif
+//#ifdef DEBUG
+//    printf("alloced\n");
+//    fflush(stdout);
+//#endif
     au = matrices[0];
     ai = matrices[1];
     bu = matrices[2];
@@ -188,13 +188,13 @@ int main(int argc, char *argv[]) {
 #endif
             // start to send/receive
             MPI_Ibsend(bu, matsize, MPI_DOUBLE,
-                       rankright, xtag, topocomm, rightsend);
+                       rankright, xtag, topocomm, &rightsend);
 //            MPI_Ibsend(bu, matsize, MPI_DOUBLE,
-//                       rankdown, ytag, topocomm, downsend);
+//                       rankdown, ytag, topocomm, &downsend);
             MPI_Irecv(bi, matsize, MPI_DOUBLE,
-                      rankleft, xtag, topocomm, leftrecv);
+                      rankleft, xtag, topocomm, &leftrecv);
 //            MPI_Irecv(bi, matsize, MPI_DOUBLE,
-//                      rankup, ytag, topocomm, uprecv);
+//                      rankup, ytag, topocomm, &uprecv);
             // do matrix multiply
             mm_kernel_accum(o, au, bu, xdim_size, ydim_size, iteration, coords[0]);
 
