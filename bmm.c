@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 #endif
                 MPI_Request recveiver;
                 MPI_Irecv(o, matsize, MPI_DOUBLE,
-                          rankmonarch, endtag, topocomm, &recveiver);
+                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
                 MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
 #ifdef DEBUG
                 printf("monarch got %i from %i\n", rankme, rankmonarch);
@@ -245,8 +245,8 @@ int main(int argc, char *argv[]) {
                 fflush(stdout);
 #endif
                 MPI_Request recveiver;
-                MPI_Irecv(&tmpdouble, 1, MPI_DOUBLE,
-                          rankmonarch, endtag, topocomm, &recveiver);
+                MPI_Irecv(o, matsize, MPI_DOUBLE,
+                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
                 MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
 #ifdef DEBUG
                 printf("monarch got %i from %i\n", rankme, rankmonarch);
