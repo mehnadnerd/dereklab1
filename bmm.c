@@ -105,20 +105,11 @@ int main(int argc, char *argv[]) {
 
     MPI_Cart_coords(topocomm, rankme, 1, coords);
     ammonarch = coords[0] == 0;
-//#ifdef DEBUG
-//    printf("mpi carted\n");
-//    fflush(stdout);
-//#endif
 
-    MPI_Datatype dbl = MPI_DOUBLE;
-    int xtag = 0xff;
-    //int ytag = 0xf00f;
+    int xtag = 0x00ff;
     int endtag = 0xbeef;
-    int deadtag = 0xdead;
     MPI_Request rightsend;
-    //MPI_Request downsend;
     MPI_Request leftrecv;
-    //MPI_Request uprecv;
 
     int xdim_size = matrix_dimension_size;
     int ydim_size = matrix_dimension_size / dims[0];
@@ -126,6 +117,7 @@ int main(int argc, char *argv[]) {
     int mystartx = 0;
     int mystarty = ydim_size * coords[0];
     int matsize = xdim_size * ydim_size;
+    printf("I am rank %i xdim %i ydim %i matsize %i starty %i\n", rankme, xdim_size, ydim_size, matsize, mystarty);
 
     double *matrices[5];
     // at start
@@ -141,7 +133,7 @@ int main(int argc, char *argv[]) {
 
     // allocate arrays
     for (int i = 0; i < 5; ++i) {
-        matrices[i] = (double *) my_calloc(matsize, sizeof(double));
+        matrices[i] = (double *) my_calloc(matsize*2, sizeof(double));
     }
 
     au = matrices[0];
@@ -170,6 +162,8 @@ int main(int argc, char *argv[]) {
             printf("inconsistency in gen_sub_matrix for %i matrix\n", matrixnum);
             exit(1);
         }
+        printf("Begin print for %i\n", rankme);
+        print_matrix(bu, xdim_size, ydim_size);
         for (int iteration = 0; iteration < dims[0]; ++iteration) {
 #ifdef DEBUG
             //            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
@@ -199,14 +193,16 @@ int main(int argc, char *argv[]) {
     printf("%i %f\n", rankme, accum);
     int c[1] = {0};
     MPI_Cart_rank(topocomm, c, &rankmonarch);
-    double newaccum;
-    MPI_Reduce(o, &newaccum, matsize,
+    MPI_Reduce(o, ai, matsize,
                    MPI_DOUBLE, MPI_SUM, rankmonarch, topocomm);
+    accum = matrix_sum(ai, xdim_size, ydim_size);
     if (ammonarch) {
-        printf("Reduce sum %f\n", newaccum);
+        printf("Reduce sum %f\n", accum);
     } else {
         printf("I'm done %i\n", rankme);
     }
+    printf("Begin final print for %i\n", rankme);
+    print_matrix(o, xdim_size, ydim_size);
     MPI_Finalize();
     return 0;
 }
