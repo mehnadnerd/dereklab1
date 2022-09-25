@@ -88,29 +88,20 @@ int main(int argc, char *argv[]) {
     int coords[1] = {0};
     MPI_Comm_size(MPI_COMM_WORLD, &p);
     MPI_Dims_create(p, 1, dims);
-    // debug
     MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
-    // end debug
     int periods[1] = {1};
-//#ifdef DEBUG
-//    printf("precarted %i\n", dims[0]);
-//    fflush(stdout);
-//#endif
+
     MPI_Comm topocomm;
     MPI_Cart_create(MPI_COMM_WORLD, 1, dims, periods, 1, &topocomm);
     if (topocomm == MPI_COMM_NULL) {
         MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
         printf("Node at rank %i is unused\n", rankme);
     }
-//#ifdef DEBUG
-//    printf("carted one\n");
-//    fflush(stdout);
-//#endif
+
     MPI_Comm_rank(topocomm, &rankme);
     MPI_Cart_shift(topocomm, 0, 1, &rankme, &rankright);
     MPI_Cart_shift(topocomm, 0, -1, &rankme, &rankleft);
-    //MPI_Cart_shift(topocomm, 1, 1, &rankme, &rankup);
-    //MPI_Cart_shift(topocomm, 1, -1, &rankme, &rankdown);
+
 
     MPI_Cart_coords(topocomm, rankme, 1, coords);
     ammonarch = coords[0] == 0;
@@ -152,10 +143,7 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 5; ++i) {
         matrices[i] = (double *) my_calloc(matsize, sizeof(double));
     }
-//#ifdef DEBUG
-//    printf("alloced\n");
-//    fflush(stdout);
-//#endif
+
     au = matrices[0];
     ai = matrices[1];
     bu = matrices[2];
@@ -190,20 +178,14 @@ int main(int argc, char *argv[]) {
             // start to send/receive
             MPI_Isend(bu, matsize, MPI_DOUBLE,
                       rankright, xtag, topocomm, &rightsend);
-//            MPI_Isend(bu, matsize, MPI_DOUBLE,
-//                       rankdown, ytag, topocomm, &downsend);
             MPI_Irecv(bi, matsize, MPI_DOUBLE,
                       rankleft, xtag, topocomm, &leftrecv);
-//            MPI_Irecv(bi, matsize, MPI_DOUBLE,
-//                      rankup, ytag, topocomm, &uprecv);
             // do matrix multiply
             mm_kernel_accum(o, au, bu, xdim_size, ydim_size, iteration, coords[0]);
 
             // finish send/receive
             MPI_Wait(&rightsend, MPI_STATUS_IGNORE);
-            //MPI_Wait(downsend, MPI_STATUS_IGNORE);
             MPI_Wait(&leftrecv, MPI_STATUS_IGNORE);
-            //MPI_Wait(uprecv, MPI_STATUS_IGNORE);
             // shuffle matrices
             // swap au and ai, bu and bi
             SWP(au, ai)
@@ -223,83 +205,6 @@ int main(int argc, char *argv[]) {
     if (ammonarch) {
         printf("Reduce sum %f\n", newaccum);
     }
-//    if (ammonarch) {
-//        // i am monarch
-//        if (debug_perf == 0) {
-//            print_matrix(o, xdim_size, ydim_size);
-//            for (int i = 1; i < dims[0]; ++i) {
-//                int c[1] = {i};
-//                MPI_Cart_rank(topocomm, c, &rankmonarch);
-//#ifdef DEBUG
-//                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
-//                fflush(stdout);
-//#endif
-//                MPI_Request recveiver;
-//                MPI_Irecv(o, matsize, MPI_DOUBLE,
-//                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
-//                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
-//#ifdef DEBUG
-//                printf("monarch got %i from %i\n", rankme, rankmonarch);
-//                fflush(stdout);
-//#endif
-//                print_matrix(o, xdim_size, ydim_size);
-//            }
-//        } else {
-//            double accum = matrix_sum(o, xdim_size, ydim_size);
-//            double tmpdouble;
-//            for (int i = 1; i < dims[0]; ++i) {
-//                int c[1] = {i};
-//                MPI_Cart_rank(topocomm, c, &rankmonarch);
-//#ifdef DEBUG
-//                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
-//                fflush(stdout);
-//#endif
-//                MPI_Request recveiver;
-//                MPI_Irecv(o, matsize, MPI_DOUBLE,
-//                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
-//                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
-//#ifdef DEBUG
-//                printf("monarch got %i from %i\n", rankme, rankmonarch);
-//                fflush(stdout);
-//#endif
-//                accum += tmpdouble;
-//            }
-//            printf("%f\n", accum);
-//        }
-//    } else {
-//        // i am non-monarch, need to send to monarch
-//        int c[1] = {0};
-//        MPI_Cart_rank(topocomm, c, &rankmonarch);
-//#ifdef DEBUG
-//        printf("sending to monarch %i from %i\n", rankmonarch, rankme);
-//        fflush(stdout);
-//#endif
-//        if (debug_perf == 0) {
-//            MPI_Request sender;
-//            MPI_Isend(o, matsize, MPI_DOUBLE,
-//                      rankmonarch, endtag, topocomm, &sender);
-//            MPI_Wait(&sender, MPI_STATUS_IGNORE);
-//        } else {
-//            double accum = matrix_sum(o, xdim_size, ydim_size);
-//            MPI_Request sender;
-//            MPI_Isend(&accum, 1, MPI_DOUBLE,
-//                      rankmonarch, endtag, topocomm, &sender);
-//            MPI_Wait(&sender, MPI_STATUS_IGNORE);
-//#ifdef DEBUG
-//            printf("%i %f\n", rankme, accum);
-//#endif
-//        }
-//#ifdef DEBUG
-//        printf("done sending to monarch %i from %i\n", rankmonarch, rankme);
-//        fflush(stdout);
-//#endif
-//        // dummy send to stop it from finishing
-//        MPI_Recv(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm, MPI_STATUS_IGNORE);
-//#ifdef DEBUG
-//        printf("extra done sending to monarch %i from %i\n", rankmonarch, rankme);
-//        fflush(stdout);
-//#endif
-//    }
     MPI_Finalize();
     return 0;
 }
