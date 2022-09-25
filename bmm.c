@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <mpi.h>
 #include <stdbool.h>
+#include <string.h>
 #include "gen_matrix.h"
 #include "my_malloc.h"
 
@@ -19,6 +20,18 @@
 // xdimsize = 4
 // ydimsize = 2
 
+void debug_print_matrix(double *result, int xdim_size, int ydim_size, int rank) {
+    int x, y;
+    for (y = 0; y < ydim_size; ++y) {
+        printf("r%i ", rank);
+        for (x = 0; x < xdim_size; ++x) {
+            printf("%f ", result[y * xdim_size + x]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 void mm_kernel_accum(
         double *__restrict result, // row major
         const double *const __restrict a, // row major
@@ -31,7 +44,7 @@ void mm_kernel_accum(
 ) {
     int x, y, k, affinex;
     for (y = 0; y < ydim_size; ++y) {
-        for (x = xnumber * ydim_size; x < (xnumber * ydim_size); ++x) {
+        for (x = xnumber * ydim_size; x < (xnumber * ydim_size) + ydim_size; ++x) {
             affinex = x - xnumber * ydim_size;
             double r = result[y * xdim_size + x];
             for (k = 0; k < xdim_size; ++k) {
@@ -154,6 +167,8 @@ int main(int argc, char *argv[]) {
         printf("inconsistency in gen_sub_matrix for first matrix\n");
         exit(1);
     }
+    printf("Begin first print for %i\n", rankme);
+    debug_print_matrix(au, xdim_size, ydim_size, rankme);
     for (int matrixnum = 1; matrixnum < num_arg_matrices; ++matrixnum) {
         if (gen_sub_matrix(rankme, test_set, matrixnum, bu,
                            mystarty, mystarty + ydim_size - 1, 1,
@@ -163,7 +178,7 @@ int main(int argc, char *argv[]) {
             exit(1);
         }
         printf("Begin print for %i\n", rankme);
-        print_matrix(bu, xdim_size, ydim_size);
+        debug_print_matrix(bu, xdim_size, ydim_size, rankme);
         for (int iteration = 0; iteration < dims[0]; ++iteration) {
 #ifdef DEBUG
             //            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
@@ -175,18 +190,24 @@ int main(int argc, char *argv[]) {
             MPI_Irecv(bi, matsize, MPI_DOUBLE,
                       rankleft, xtag, topocomm, &leftrecv);
             // do matrix multiply
+            printf("Begin printa for %i\n", rankme);
+            debug_print_matrix(au, xdim_size, ydim_size, rankme);
+            printf("Begin printb for %i\n", rankme);
+            debug_print_matrix(bu, xdim_size, ydim_size, rankme);
             mm_kernel_accum(o, au, bu, xdim_size, ydim_size, iteration, coords[0]);
 
             // finish send/receive
             MPI_Wait(&rightsend, MPI_STATUS_IGNORE);
             MPI_Wait(&leftrecv, MPI_STATUS_IGNORE);
             // shuffle matrices
-            // swap au and ai, bu and bi
-            SWP(au, ai)
+            // swap bu and bi
             SWP(bu, bi)
         }
         // assign output to a (b will be overwritten at top of loop)
         SWP(au, o)
+        memset(o, 0, matsize * sizeof(double));
+        printf("Begin inter print for %i\n", rankme);
+        debug_print_matrix(au, xdim_size, ydim_size, rankme);
     }
     o = au;
     double accum = matrix_sum(o, xdim_size, ydim_size);
@@ -202,7 +223,7 @@ int main(int argc, char *argv[]) {
         printf("I'm done %i\n", rankme);
     }
     printf("Begin final print for %i\n", rankme);
-    print_matrix(o, xdim_size, ydim_size);
+    debug_print_matrix(o, xdim_size, ydim_size, rankme);
     MPI_Finalize();
     return 0;
 }
