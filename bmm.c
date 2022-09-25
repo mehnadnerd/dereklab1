@@ -226,6 +226,10 @@ int main(int argc, char *argv[]) {
 #endif
                 MPI_Recv(o, matsize, MPI_DOUBLE,
                          rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
+#ifdef DEBUG
+                printf("monarch got %i from %i\n", rankme, rankmonarch);
+                fflush(stdout);
+#endif
                 print_matrix(o, xdim_size, ydim_size);
             }
         } else {
@@ -240,6 +244,10 @@ int main(int argc, char *argv[]) {
 #endif
                 MPI_Recv(&tmpdouble, 1, MPI_DOUBLE,
                          rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
+#ifdef DEBUG
+                printf("monarch got %i from %i\n", rankme, rankmonarch);
+                fflush(stdout);
+#endif
                 accum += tmpdouble;
             }
             printf("%f\n", accum);
