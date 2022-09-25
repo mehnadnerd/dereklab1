@@ -213,76 +213,78 @@ int main(int argc, char *argv[]) {
         SWP(au, o)
     }
     o = au;
-    if (ammonarch) {
-        // i am monarch
-        if (debug_perf == 0) {
-            print_matrix(o, xdim_size, ydim_size);
-            for (int i = 1; i < dims[0]; ++i) {
-                int c[1] = {i};
-                MPI_Cart_rank(topocomm, c, &rankmonarch);
-#ifdef DEBUG
-                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
-                fflush(stdout);
-#endif
-                MPI_Request recveiver;
-                MPI_Irecv(o, matsize, MPI_DOUBLE,
-                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
-                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
-#ifdef DEBUG
-                printf("monarch got %i from %i\n", rankme, rankmonarch);
-                fflush(stdout);
-#endif
-                print_matrix(o, xdim_size, ydim_size);
-            }
-        } else {
-            double accum = matrix_sum(o, xdim_size, ydim_size);
-            double tmpdouble;
-            for (int i = 1; i < dims[0]; ++i) {
-                int c[1] = {i};
-                MPI_Cart_rank(topocomm, c, &rankmonarch);
-#ifdef DEBUG
-                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
-                fflush(stdout);
-#endif
-                MPI_Request recveiver;
-                MPI_Irecv(o, matsize, MPI_DOUBLE,
-                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
-                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
-#ifdef DEBUG
-                printf("monarch got %i from %i\n", rankme, rankmonarch);
-                fflush(stdout);
-#endif
-                accum += tmpdouble;
-            }
-            printf("%f\n", accum);
-        }
-    } else {
-        // i am non-monarch, need to send to monarch
-        int c[1] = {0};
-        MPI_Cart_rank(topocomm, c, &rankmonarch);
-#ifdef DEBUG
-        printf("sending to monarch %i from %i\n", rankmonarch, rankme);
-        fflush(stdout);
-#endif
-        if (debug_perf == 0) {
-            MPI_Request sender;
-            MPI_Isend(o, matsize, MPI_DOUBLE,
-                      rankmonarch, endtag, topocomm, &sender);
-            MPI_Wait(&sender, MPI_STATUS_IGNORE);
-        } else {
-            double accum = matrix_sum(o, xdim_size, ydim_size);
-            MPI_Request sender;
-            MPI_Isend(&accum, 1, MPI_DOUBLE,
-                      rankmonarch, endtag, topocomm, &sender);
-            MPI_Wait(&sender, MPI_STATUS_IGNORE);
-#ifdef DEBUG
-            printf("%i %f\n", rankme, accum);
-#endif
-        }
-#ifdef DEBUG
-        printf("done sending to monarch %i from %i\n", rankmonarch, rankme);
-        fflush(stdout);
-#endif
+    double accum = matrix_sum(o, xdim_size, ydim_size);
+    printf("%i %f\b", rankme, accum);
+//    if (ammonarch) {
+//        // i am monarch
+//        if (debug_perf == 0) {
+//            print_matrix(o, xdim_size, ydim_size);
+//            for (int i = 1; i < dims[0]; ++i) {
+//                int c[1] = {i};
+//                MPI_Cart_rank(topocomm, c, &rankmonarch);
+//#ifdef DEBUG
+//                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
+//                fflush(stdout);
+//#endif
+//                MPI_Request recveiver;
+//                MPI_Irecv(o, matsize, MPI_DOUBLE,
+//                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
+//                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
+//#ifdef DEBUG
+//                printf("monarch got %i from %i\n", rankme, rankmonarch);
+//                fflush(stdout);
+//#endif
+//                print_matrix(o, xdim_size, ydim_size);
+//            }
+//        } else {
+//            double accum = matrix_sum(o, xdim_size, ydim_size);
+//            double tmpdouble;
+//            for (int i = 1; i < dims[0]; ++i) {
+//                int c[1] = {i};
+//                MPI_Cart_rank(topocomm, c, &rankmonarch);
+//#ifdef DEBUG
+//                printf("monarch receiving %i from %i\n", rankme, rankmonarch);
+//                fflush(stdout);
+//#endif
+//                MPI_Request recveiver;
+//                MPI_Irecv(o, matsize, MPI_DOUBLE,
+//                          MPI_ANY_SOURCE, MPI_ANY_TAG, topocomm, &recveiver);
+//                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
+//#ifdef DEBUG
+//                printf("monarch got %i from %i\n", rankme, rankmonarch);
+//                fflush(stdout);
+//#endif
+//                accum += tmpdouble;
+//            }
+//            printf("%f\n", accum);
+//        }
+//    } else {
+//        // i am non-monarch, need to send to monarch
+//        int c[1] = {0};
+//        MPI_Cart_rank(topocomm, c, &rankmonarch);
+//#ifdef DEBUG
+//        printf("sending to monarch %i from %i\n", rankmonarch, rankme);
+//        fflush(stdout);
+//#endif
+//        if (debug_perf == 0) {
+//            MPI_Request sender;
+//            MPI_Isend(o, matsize, MPI_DOUBLE,
+//                      rankmonarch, endtag, topocomm, &sender);
+//            MPI_Wait(&sender, MPI_STATUS_IGNORE);
+//        } else {
+//            double accum = matrix_sum(o, xdim_size, ydim_size);
+//            MPI_Request sender;
+//            MPI_Isend(&accum, 1, MPI_DOUBLE,
+//                      rankmonarch, endtag, topocomm, &sender);
+//            MPI_Wait(&sender, MPI_STATUS_IGNORE);
+//#ifdef DEBUG
+//            printf("%i %f\n", rankme, accum);
+//#endif
+//        }
+//#ifdef DEBUG
+//        printf("done sending to monarch %i from %i\n", rankmonarch, rankme);
+//        fflush(stdout);
+//#endif
 //        // dummy send to stop it from finishing
 //        MPI_Recv(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm, MPI_STATUS_IGNORE);
 //#ifdef DEBUG
