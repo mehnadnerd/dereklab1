@@ -17,13 +17,14 @@
 // a = size0 x size1
 static void custom_mm(double *res, double *a, double *b, int size0, int size1)
 {
-    int offs = 0;
     for (int i = 0; i < size0; i++) {
-        int idx = i*offs;
-        for (int j = 0; j < size1; j++) {
-            res[offs + j] += a[i*size1 + j]*b[i*size1 + j];
+        for (int j = 0; j < size0; j++) {
+            double val = 0.0;
+            for (int k = 0; k < size1; k++) {
+                val += a[i*size1 + k]*b[j*size1 + k];
+            }
+            res[i*size1 + j] = val;
         }
-        offs += size1;
     }
 }
 
@@ -79,9 +80,10 @@ int main(int argc, char *argv[]) {
     // get first input matrix
     // horizontal
     //  each core responsible for one row
+    // TODO: fix this to match rowmajor/columnmajor
     gen_sub_matrix(myrank, test_set, 0, horizontal,
                     0, matrix_dimension_size - 1, 1,
-                    base, split_size - 1, 1, 1);
+                    base, split_size - 1, 1, 0);
 
     // buffer all prints
     if (debug_perf == 0) {
@@ -109,7 +111,7 @@ int main(int argc, char *argv[]) {
 	    // get next matrix vertically
       	gen_sub_matrix(myrank, test_set, i, vertical,
                       	base, split_size - 1, 1,
-                      	0, matrix_dimension_size - 1, 1, 0);
+                      	0, matrix_dimension_size - 1, 1, 1);
 
         if (debug_perf == 0) {
             bool first = true; bool dummy;
@@ -146,6 +148,15 @@ int main(int argc, char *argv[]) {
             }
             // matrix multiply into output subregion
             custom_mm(output, horizontal, vertical, split_size, matrix_dimension_size);
+            if (coords[0] == 0) {
+                printf("new row output\n");
+                for (int j = 0; j < split_size; j++) {
+                    for (int k = 0; k < matrix_dimension_size; k++) {
+                        printf("%lf ", output[j*matrix_dimension_size + k]);
+                    }
+                    printf("\n");
+                }
+            }
             output += split_size*matrix_dimension_size;
 
             if (iteration != (size - 1)) {
@@ -157,7 +168,7 @@ int main(int argc, char *argv[]) {
         }
         // reset output ptr
         output = begin;
-        // row done - swap horizontal and output buffers
+        // matrix done - swap horizontal and output buffers
         SWP(horizontal, output);
         // zero out output matrix
         for (int j = 0; j < split_size*matrix_dimension_size; j++) {
