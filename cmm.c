@@ -146,6 +146,15 @@ int main(int argc, char *argv[]) {
             }
             // matrix multiply into output subregion
             custom_mm(output, horizontal, vertical, split_size, matrix_dimension_size);
+            if (coords[0] == 0) {
+                printf("new row output\n");
+                for (int j = 0; j < split_size; j++) {
+                    for (int k = 0; k < matrix_dimension_size; k++) {
+                        printf("%lf ", output[j*matrix_dimension_size + k]);
+                    }
+                    printf("\n");
+                }
+            }
             output += split_size*matrix_dimension_size;
 
             if (iteration != (size - 1)) {
@@ -157,7 +166,7 @@ int main(int argc, char *argv[]) {
         }
         // reset output ptr
         output = begin;
-        // row done - swap horizontal and output buffers
+        // matrix done - swap horizontal and output buffers
         SWP(horizontal, output);
         // zero out output matrix
         for (int j = 0; j < split_size*matrix_dimension_size; j++) {
