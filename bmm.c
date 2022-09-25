@@ -215,6 +215,14 @@ int main(int argc, char *argv[]) {
     o = au;
     double accum = matrix_sum(o, xdim_size, ydim_size);
     printf("%i %f\n", rankme, accum);
+    int c[1] = {0};
+    MPI_Cart_rank(topocomm, c, &rankmonarch);
+    double newaccum;
+    MPI_Reduce(o, &newaccum, matsize,
+                   MPI_DOUBLE, MPI_SUM, rankmonarch, topocomm);
+    if (ammonarch) {
+        printf("Reduce sum %f\n", newaccum);
+    }
 //    if (ammonarch) {
 //        // i am monarch
 //        if (debug_perf == 0) {
