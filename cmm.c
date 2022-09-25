@@ -21,7 +21,7 @@ static void custom_mm(double *res, double *a, double *b, int size0, int size1)
     for (int i = 0; i < size0; i++) {
         int idx = i*offs;
         for (int j = 0; j < size1; j++) {
-            res[offs] += a[i*size1 + j]*b[i*size1 + j];
+            res[offs + j] += a[i*size1 + j]*b[i*size1 + j];
         }
         offs += size1;
     }
@@ -82,25 +82,71 @@ int main(int argc, char *argv[]) {
     gen_sub_matrix(myrank, test_set, 0, horizontal,
                     0, matrix_dimension_size - 1, 1,
                     base, split_size - 1, 1, 1);
+
+    // buffer all prints
+    if (debug_perf == 0) {
+        bool dummy;
+        if (coords[0] == 0) {
+            // monarch
+            printf("argument matrix 0\n");
+        }
+        else {
+            MPI_Recv(&dummy, 1, MPI_C_BOOL, prevrank, 0xbeef, topocomm, MPI_STATUS_IGNORE);
+        }
+
+        for (int i = 0; i < split_size; i++) {
+            for (int j = 0; j < matrix_dimension_size; j++) {
+                printf("%lf ", horizontal[i*matrix_dimension_size + j]);
+            }
+            printf("\n");
+        }
+        MPI_Send(&dummy, 1, MPI_C_BOOL, nextrank, 0xbeef, topocomm);
+    }
+
     for (int i = 1; i < num_arg_matrices; ++i) {
+        // handles
+        MPI_Request *send, *rcv;
 	    // get next matrix vertically
       	gen_sub_matrix(myrank, test_set, i, vertical,
                       	base, split_size - 1, 1,
                       	0, matrix_dimension_size - 1, 1, 0);
+
+        if (debug_perf == 0) {
+            bool first = true; bool dummy;
+            if (coords[0] == 0) {
+                // monarch
+                printf("argument matrix %d\n", i);
+            }
+            for (int i = 0; i < matrix_dimension_size; i++) {
+                if (!first || (coords[0] != 0)) {
+                    MPI_Recv(&dummy, 1, MPI_C_BOOL, prevrank, 0xbeef, topocomm, MPI_STATUS_IGNORE);
+                }
+                else {
+                    first = false;
+                }
+                for (int j = 0; j < split_size; j++) {
+                    printf("%lf ", vertical[j*matrix_dimension_size + i]);
+                }
+                if (coords[0] == size - 1) {
+                    printf("\n");
+                }
+                MPI_Send(&dummy, 1, MPI_C_BOOL, nextrank, 0xbeef, topocomm);
+            }
+        }
+
         double *begin = output;
       	for (int iteration = 0; iteration < size; ++iteration) {
-            MPI_Request *send, *rcv;
             // nonblocking send
             if (iteration != (size - 1)) {
                 MPI_Ibsend(vertical, split_size*matrix_dimension_size, MPI_DOUBLE,
-                            nextrank, 0xdead, topocomm, send);
+                            nextrank, 0xbeef, topocomm, send);
                 // nonblocking receive
                 MPI_Irecv(tmp, split_size*matrix_dimension_size, MPI_DOUBLE,
                           prevrank, 0xbeef, topocomm, rcv);
             }
             // matrix multiply into output subregion
             custom_mm(output, horizontal, vertical, split_size, matrix_dimension_size);
-            output += split_size;
+            output += split_size*matrix_dimension_size;
 
             if (iteration != (size - 1)) {
                 MPI_Wait(send, MPI_STATUS_IGNORE);
@@ -113,6 +159,29 @@ int main(int argc, char *argv[]) {
         output = begin;
         // row done - swap horizontal and output buffers
         SWP(horizontal, output);
+        // zero out output matrix
+        for (int j = 0; j < split_size*matrix_dimension_size; j++) {
+            output[j] = 0;
+        }
+    }
+
+    if (debug_perf == 0) {
+        bool dummy;
+        if (coords[0] == 0) {
+            // monarch
+            printf("result matrix\n");
+        }
+        else {
+            MPI_Recv(&dummy, 1, MPI_C_BOOL, prevrank, 0xbeef, topocomm, MPI_STATUS_IGNORE);
+        }
+
+        for (int i = 0; i < split_size; i++) {
+            for (int j = 0; j < matrix_dimension_size; j++) {
+                printf("%lf ", horizontal[i*matrix_dimension_size + j]);
+            }
+            printf("\n");
+        }
+        MPI_Send(&dummy, 1, MPI_C_BOOL, nextrank, 0xbeef, topocomm);
     }
     return 0;
 }
