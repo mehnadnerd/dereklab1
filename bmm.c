@@ -220,6 +220,10 @@ int main(int argc, char *argv[]) {
             for (int i = 1; i < dims[0]; ++i) {
                 int c[1] = {i};
                 MPI_Cart_rank(topocomm, c, &rankmonarch);
+#ifdef DEBUG
+                printf("monarch receiving %i from %i", rankme, rankmonarch);
+                fflush(stdout);
+#endif
                 MPI_Recv(ai, matsize, MPI_DOUBLE,
                          rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
                 print_matrix(ai, xdim_size, ydim_size);
@@ -230,6 +234,10 @@ int main(int argc, char *argv[]) {
             for (int i = 1; i < dims[0]; ++i) {
                 int c[1] = {i};
                 MPI_Cart_rank(topocomm, c, &rankmonarch);
+#ifdef DEBUG
+                printf("monarch receiving %i from %i", rankme, rankmonarch);
+                fflush(stdout);
+#endif
                 MPI_Recv(&tmpdouble, 1, MPI_DOUBLE,
                          rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
                 accum += tmpdouble;
@@ -240,6 +248,10 @@ int main(int argc, char *argv[]) {
         // i am non-monarch, need to send to monarch
         int c[1] = {0};
         MPI_Cart_rank(topocomm, c, &rankmonarch);
+#ifdef DEBUG
+        printf("sending to monarch %i from %i", rankmonarch, rankme);
+        fflush(stdout);
+#endif
         if (debug_perf == 0) {
             MPI_Send(o, matsize, MPI_DOUBLE,
                       rankmonarch, endtag, topocomm);
