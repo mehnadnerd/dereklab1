@@ -224,8 +224,10 @@ int main(int argc, char *argv[]) {
                 printf("monarch receiving %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
 #endif
-                MPI_Recv(o, matsize, MPI_DOUBLE,
-                         rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
+                MPI_Request recveiver;
+                MPI_Irecv(o, matsize, MPI_DOUBLE,
+                          rankmonarch, endtag, topocomm, &recveiver);
+                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
 #ifdef DEBUG
                 printf("monarch got %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
@@ -242,8 +244,10 @@ int main(int argc, char *argv[]) {
                 printf("monarch receiving %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
 #endif
-                MPI_Recv(&tmpdouble, 1, MPI_DOUBLE,
-                         rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
+                MPI_Request recveiver;
+                MPI_Irecv(&tmpdouble, 1, MPI_DOUBLE,
+                          rankmonarch, endtag, topocomm, &recveiver);
+                MPI_Wait(&recveiver, MPI_STATUS_IGNORE);
 #ifdef DEBUG
                 printf("monarch got %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
@@ -261,12 +265,16 @@ int main(int argc, char *argv[]) {
         fflush(stdout);
 #endif
         if (debug_perf == 0) {
-            MPI_Send(o, matsize, MPI_DOUBLE,
-                     rankmonarch, endtag, topocomm);
+            MPI_Request sender;
+            MPI_Isend(o, matsize, MPI_DOUBLE,
+                      rankmonarch, endtag, topocomm, &sender);
+            MPI_Wait(&sender, MPI_STATUS_IGNORE);
         } else {
             double accum = matrix_sum(o, xdim_size, ydim_size);
-            MPI_Send(&accum, 1, MPI_DOUBLE,
-                     rankmonarch, endtag, topocomm);
+            MPI_Request sender;
+            MPI_Isend(&accum, 1, MPI_DOUBLE,
+                      rankmonarch, endtag, topocomm, &sender);
+            MPI_Wait(&sender, MPI_STATUS_IGNORE);
 #ifdef DEBUG
             printf("%i %f\n", rankme, accum);
 #endif
