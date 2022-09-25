@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
     bool ammonarch;
     int rankme, rankleft, rankup, rankright, rankdown, rankmonarch;
     int num_arg_matrices;
+    int c[1] = {0};
 
     if (argc != 4) {
         printf("usage: debug_perf test_set matrix_dimension_size\n");
@@ -146,7 +147,7 @@ int main(int argc, char *argv[]) {
 
     // allocate arrays
     for (int i = 0; i < 5; ++i) {
-        matrices[i] = (double *) my_calloc(matsize*2, sizeof(double));
+        matrices[i] = (double *) my_calloc(matsize, sizeof(double));
     }
 
     au = matrices[0];
@@ -157,6 +158,18 @@ int main(int argc, char *argv[]) {
     if (au == NULL || ai == NULL || bu == NULL || bi == NULL || o == NULL) {
         printf("mem failed\n");
         exit(1);
+    }
+
+    float asdf = 1.0f;
+    MPI_Cart_rank(topocomm, c, &rankmonarch);
+    MPI_Gather(&asdf, 1, MPI_FLOAT, ai, 1, MPI_FLOAT, rankmonarch, MPI_COMM_WORLD);
+    if (ammonarch) {
+        printf("Begin ai print\n");
+        debug_print_matrix(ai, dims[0], 1, -1);
+        double newaccum = matrix_sum(ai, dims[0], 1);
+        printf("Reduce sum %f\n", newaccum);
+    } else {
+        printf("I'm done %i\n", rankme);
     }
 
     // get first a matrix
@@ -216,17 +229,17 @@ int main(int argc, char *argv[]) {
     debug_print_matrix(o, xdim_size, ydim_size, rankme);
     double accum = matrix_sum(o, xdim_size, ydim_size);
     printf("%i local sum %f\n", rankme, accum);
-    int c[1] = {0};
     MPI_Cart_rank(topocomm, c, &rankmonarch);
-    accum = rankme;
-    double totalaccum;
-    printf("rme %i rm %i\n", rankme, rankmonarch);
-    MPI_Reduce(&accum, &totalaccum, 1, MPI_DOUBLE, MPI_MAX, rankmonarch, topocomm);
+    MPI_Gather(&accum, 1, MPI_DOUBLE, ai, 1, MPI_DOUBLE, rankmonarch, MPI_COMM_WORLD);
     if (ammonarch) {
-        printf("Reduce sum %f\n", totalaccum);
+        printf("Begin ai print\n");
+        debug_print_matrix(ai, dims[0], 1, -1);
+        double newaccum = matrix_sum(ai, dims[0], 1);
+        printf("Reduce sum %f\n", newaccum);
     } else {
         printf("I'm done %i\n", rankme);
     }
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
     return 0;
 }
