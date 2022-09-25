@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
     }
     o = au;
     double accum = matrix_sum(o, xdim_size, ydim_size);
-    printf("%i %f\b", rankme, accum);
+    printf("%i %f\n", rankme, accum);
 //    if (ammonarch) {
 //        // i am monarch
 //        if (debug_perf == 0) {
