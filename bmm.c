@@ -291,7 +291,7 @@ int main(int argc, char *argv[]) {
 //        printf("extra done sending to monarch %i from %i\n", rankmonarch, rankme);
 //        fflush(stdout);
 //#endif
-    }
+//    }
     MPI_Finalize();
     return 0;
 }
