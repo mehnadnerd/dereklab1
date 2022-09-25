@@ -54,11 +54,11 @@ double matrix_sum(const double *const __restrict a, // row major
     return accum;
 }
 
-void print_matrix(double *result, int dim_size) {
+void print_matrix(double *result, int xdim_size, int ydim_size) {
     int x, y;
-    for (y = 0; y < dim_size; ++y) {
-        for (x = 0; x < dim_size; ++x) {
-            printf("%f ", result[y * dim_size + x]);
+    for (y = 0; y < ydim_size; ++y) {
+        for (x = 0; x < xdim_size; ++x) {
+            printf("%f ", result[y * xdim_size + x]);
         }
         printf("\n");
     }
@@ -70,7 +70,7 @@ void print_matrix(double *result, int dim_size) {
 int main(int argc, char *argv[]) {
     MPI_Init(&argc, &argv);
     bool ammonarch;
-    int rankme, rankleft, rankup, rankright, rankdown;
+    int rankme, rankleft, rankup, rankright, rankdown, rankmonarch;
     int num_arg_matrices;
 
     if (argc != 4) {
@@ -88,7 +88,6 @@ int main(int argc, char *argv[]) {
     int coords[1] = {0};
     MPI_Comm_size(MPI_COMM_WORLD, &p);
     MPI_Dims_create(p, 1, dims);
-    ammonarch = rankme == 0;
     // debug
     MPI_Comm_rank(MPI_COMM_WORLD, &rankme);
     // end debug
@@ -114,6 +113,7 @@ int main(int argc, char *argv[]) {
     //MPI_Cart_shift(topocomm, 1, -1, &rankme, &rankdown);
 
     MPI_Cart_coords(topocomm, rankme, 1, coords);
+    ammonarch = coords[0] == 0;
 //#ifdef DEBUG
 //    printf("mpi carted\n");
 //    fflush(stdout);
@@ -123,6 +123,7 @@ int main(int argc, char *argv[]) {
     int xtag = 0xff;
     //int ytag = 0xf00f;
     int endtag = 0xbeef;
+    int deadtag = 0xdead;
     MPI_Request rightsend;
     //MPI_Request downsend;
     MPI_Request leftrecv;
@@ -215,45 +216,43 @@ int main(int argc, char *argv[]) {
     if (ammonarch) {
         // i am monarch
         if (debug_perf == 0) {
-            // TODO
+            print_matrix(o, xdim_size, ydim_size);
+            for (int i = 1; i < dims[0]; ++i) {
+                int c[1] = {i};
+                MPI_Cart_rank(topocomm, c, &rankmonarch);
+                MPI_Recv(ai, matsize, MPI_DOUBLE,
+                         rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
+                print_matrix(ai, xdim_size, ydim_size);
+            }
         } else {
             double accum = matrix_sum(o, xdim_size, ydim_size);
-//            for (int i = 0; i < dim; ++i) {
-//                for (int j = 0; j < dim; ++j) {
-//                    if (i == 0 && j == 0) {
-//                        continue;
-//                    }
-//                    // TODO receive value from this node, add to accum
-//                }
-//            }
+            double tmpdouble;
+            for (int i = 1; i < dims[0]; ++i) {
+                int c[1] = {i};
+                MPI_Cart_rank(topocomm, c, &rankmonarch);
+                MPI_Recv(&tmpdouble, 1, MPI_DOUBLE,
+                         rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
+                accum += tmpdouble;
+            }
             printf("%f\n", accum);
         }
     } else {
         // i am non-monarch, need to send to monarch
+        int c[1] = {0};
+        MPI_Cart_rank(topocomm, c, &rankmonarch);
         if (debug_perf == 0) {
-            // TODO send things to monarch
+            MPI_Send(o, matsize, MPI_DOUBLE,
+                      rankmonarch, endtag, topocomm);
         } else {
             double accum = matrix_sum(o, xdim_size, ydim_size);
+            MPI_Send(&accum, 1, MPI_DOUBLE,
+                     rankmonarch, endtag, topocomm);
+#ifdef DEBUG
             printf("%i %f\n", rankme, accum);
-            // TODO send to monarch
+#endif
         }
+        // dummy send to stop it from finishing
+        MPI_Send(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm);
     }
-
-//    if (debug_perf == 0) {
-//        // print each of the sub matrices
-//        for (i = 0; i < num_arg_matrices; ++i) {
-//            printf("argument matrix %d\n", i);
-//            print_matrix(r[i], matrix_dimension_size);
-//        }
-//        printf("result matrix\n");
-//        print_matrix(result[n], matrix_dimension_size);
-//    } else {
-//        double sum = 0.0;
-//
-//        for (i = 0; i < matrix_dimension_size * matrix_dimension_size; ++i) {
-//            sum += result[n][i];
-//        }
-//        printf("%f\n", sum);
-//    }
     return 0;
 }
