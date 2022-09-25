@@ -204,6 +204,8 @@ int main(int argc, char *argv[]) {
                    MPI_DOUBLE, MPI_SUM, rankmonarch, topocomm);
     if (ammonarch) {
         printf("Reduce sum %f\n", newaccum);
+    } else {
+        printf("I'm done %i\n", rankme);
     }
     MPI_Finalize();
     return 0;
