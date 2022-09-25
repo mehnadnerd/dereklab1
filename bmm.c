@@ -28,7 +28,7 @@ void mm_kernel_accum(
         const int xnumber,
         const int ynumber
         // n.b. we don't care about ynumber/y because we would have to offset and then unoffset it
-        ) {
+) {
     int x, y, k, affinex;
     for (y = 0; y < ydim_size; ++y) {
         for (x = xnumber * ydim_size; x < (xnumber * ydim_size); ++x) {
@@ -184,12 +184,12 @@ int main(int argc, char *argv[]) {
         }
         for (int iteration = 0; iteration < dims[0]; ++iteration) {
 #ifdef DEBUG
-//            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
-//            fflush(stdout);
+            //            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
+            //            fflush(stdout);
 #endif
             // start to send/receive
             MPI_Isend(bu, matsize, MPI_DOUBLE,
-                       rankright, xtag, topocomm, &rightsend);
+                      rankright, xtag, topocomm, &rightsend);
 //            MPI_Isend(bu, matsize, MPI_DOUBLE,
 //                       rankdown, ytag, topocomm, &downsend);
             MPI_Irecv(bi, matsize, MPI_DOUBLE,
@@ -224,9 +224,9 @@ int main(int argc, char *argv[]) {
                 printf("monarch receiving %i from %i\n", rankme, rankmonarch);
                 fflush(stdout);
 #endif
-                MPI_Recv(ai, matsize, MPI_DOUBLE,
+                MPI_Recv(o, matsize, MPI_DOUBLE,
                          rankmonarch, endtag, topocomm, MPI_STATUS_IGNORE);
-                print_matrix(ai, xdim_size, ydim_size);
+                print_matrix(o, xdim_size, ydim_size);
             }
         } else {
             double accum = matrix_sum(o, xdim_size, ydim_size);
@@ -254,7 +254,7 @@ int main(int argc, char *argv[]) {
 #endif
         if (debug_perf == 0) {
             MPI_Send(o, matsize, MPI_DOUBLE,
-                      rankmonarch, endtag, topocomm);
+                     rankmonarch, endtag, topocomm);
         } else {
             double accum = matrix_sum(o, xdim_size, ydim_size);
             MPI_Send(&accum, 1, MPI_DOUBLE,
@@ -263,8 +263,16 @@ int main(int argc, char *argv[]) {
             printf("%i %f\n", rankme, accum);
 #endif
         }
+#ifdef DEBUG
+        printf("done sending to monarch %i from %i\n", rankmonarch, rankme);
+        fflush(stdout);
+#endif
         // dummy send to stop it from finishing
-        //MPI_Send(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm);
+        MPI_Send(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm);
+#ifdef DEBUG
+        printf("extra done sending to monarch %i from %i\n", rankmonarch, rankme);
+        fflush(stdout);
+#endif
     }
     return 0;
 }
