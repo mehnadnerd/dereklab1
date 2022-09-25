@@ -199,9 +199,9 @@ int main(int argc, char *argv[]) {
             mm_kernel_accum(o, au, bu, xdim_size, ydim_size, iteration, coords[0]);
 
             // finish send/receive
-            MPI_Wait(rightsend, MPI_STATUS_IGNORE);
+            MPI_Wait(&rightsend, MPI_STATUS_IGNORE);
             //MPI_Wait(downsend, MPI_STATUS_IGNORE);
-            MPI_Wait(leftrecv, MPI_STATUS_IGNORE);
+            MPI_Wait(&leftrecv, MPI_STATUS_IGNORE);
             //MPI_Wait(uprecv, MPI_STATUS_IGNORE);
             // shuffle matrices
             // swap au and ai, bu and bi
