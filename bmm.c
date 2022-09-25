@@ -113,12 +113,15 @@ int main(int argc, char *argv[]) {
     }
 
     MPI_Comm_rank(topocomm, &rankme);
-    MPI_Cart_shift(topocomm, 0, 1, &rankme, &rankright);
-    MPI_Cart_shift(topocomm, 0, -1, &rankme, &rankleft);
-
-
+    c[0] = rankme + 1;
+    MPI_Cart_rank(topocomm, c, &rankright);
+    c[0] = rankme - 1;
+    MPI_Cart_rank(topocomm, c, &rankleft);
+    c[0] = 0;
+    MPI_Cart_rank(topocomm, c, &rankmonarch);
     MPI_Cart_coords(topocomm, rankme, 1, coords);
-    ammonarch = coords[0] == 0;
+    printf("I am m %i l %i r %i m %i\n", rankme, rankleft, rankright, rankmonarch);
+    ammonarch = rankme == rankmonarch;
 
     int xtag = 0x00ff;
     int endtag = 0xbeef;
@@ -158,18 +161,6 @@ int main(int argc, char *argv[]) {
     if (au == NULL || ai == NULL || bu == NULL || bi == NULL || o == NULL) {
         printf("mem failed\n");
         exit(1);
-    }
-
-    float asdf = 1.0f;
-    MPI_Cart_rank(topocomm, c, &rankmonarch);
-    MPI_Gather(&asdf, 1, MPI_FLOAT, ai, 1, MPI_FLOAT, rankmonarch, MPI_COMM_WORLD);
-    if (ammonarch) {
-        printf("Begin ai print\n");
-        debug_print_matrix(ai, dims[0], 1, -1);
-        double newaccum = matrix_sum(ai, dims[0], 1);
-        printf("Reduce sum %f\n", newaccum);
-    } else {
-        printf("I'm done %i\n", rankme);
     }
 
     // get first a matrix
@@ -229,11 +220,11 @@ int main(int argc, char *argv[]) {
     debug_print_matrix(o, xdim_size, ydim_size, rankme);
     double accum = matrix_sum(o, xdim_size, ydim_size);
     printf("%i local sum %f\n", rankme, accum);
-    MPI_Cart_rank(topocomm, c, &rankmonarch);
     MPI_Gather(&accum, 1, MPI_DOUBLE, ai, 1, MPI_DOUBLE, rankmonarch, MPI_COMM_WORLD);
+    printf("I am %i and monarch is %i\n", rankme, rankmonarch);
     if (ammonarch) {
         printf("Begin ai print\n");
-        debug_print_matrix(ai, dims[0], 1, -1);
+        debug_print_matrix(ai, dims[0], 1, 100+rankme);
         double newaccum = matrix_sum(ai, dims[0], 1);
         printf("Reduce sum %f\n", newaccum);
     } else {

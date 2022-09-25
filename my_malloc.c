@@ -20,7 +20,7 @@ void *my_calloc(int num_elements, int element_size) {
 
     p = calloc(num_elements + 1, element_size);
     ((int *) p)[0] = num_elements * element_size;
-    p += element_size;
+    p += sizeof(int);
     return (p);
 }
 
