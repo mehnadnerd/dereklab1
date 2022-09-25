@@ -72,6 +72,8 @@ double gen_one_element(int test_set,
 
             }
             break;
+        case 2:
+            return y * matrix_dimension_size + x;
 
         default:
             return 0;
@@ -154,7 +156,10 @@ int init_gen_sub_matrix(int test_set) {
             num_arg_matrices = 3;
             break;
         case 1:
-            num_arg_matrices = 8;
+            num_arg_matrices = 3;
+            break;
+        case 2:
+            num_arg_matrices = 2;
             break;
         default:
             printf("we only have 3 tests, numbered 0, 1, and 2\n");
