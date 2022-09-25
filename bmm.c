@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
         fflush(stdout);
 #endif
         // dummy send to stop it from finishing
-        MPI_Send(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm);
+        MPI_Recv(o, 1, MPI_DOUBLE, rankmonarch, deadtag, topocomm, MPI_STATUS_IGNORE);
 #ifdef DEBUG
         printf("extra done sending to monarch %i from %i\n", rankmonarch, rankme);
         fflush(stdout);
