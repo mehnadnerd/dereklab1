@@ -187,9 +187,9 @@ int main(int argc, char *argv[]) {
             fflush(stdout);
 #endif
             // start to send/receive
-            MPI_Ibsend(bu, matsize, MPI_DOUBLE,
+            MPI_Isend(bu, matsize, MPI_DOUBLE,
                        rankright, xtag, topocomm, &rightsend);
-//            MPI_Ibsend(bu, matsize, MPI_DOUBLE,
+//            MPI_Isend(bu, matsize, MPI_DOUBLE,
 //                       rankdown, ytag, topocomm, &downsend);
             MPI_Irecv(bi, matsize, MPI_DOUBLE,
                       rankleft, xtag, topocomm, &leftrecv);
