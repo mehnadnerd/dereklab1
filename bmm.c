@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     c[0] = 0;
     MPI_Cart_rank(topocomm, c, &rankmonarch);
     MPI_Cart_coords(topocomm, rankme, 1, coords);
-    printf("I am m %i l %i r %i m %i\n", rankme, rankleft, rankright, rankmonarch);
+    //printf("I am m %i l %i r %i m %i\n", rankme, rankleft, rankright, rankmonarch);
     ammonarch = rankme == rankmonarch;
 
     int xtag = 0x00ff;
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
     int mystartx = 0;
     int mystarty = ydim_size * coords[0];
     int matsize = xdim_size * ydim_size;
-    printf("I am rank %i xdim %i ydim %i matsize %i starty %i\n", rankme, xdim_size, ydim_size, matsize, mystarty);
+//    printf("I am rank %i xdim %i ydim %i matsize %i starty %i\n", rankme, xdim_size, ydim_size, matsize, mystarty);
 
     double *matrices[5];
     // at start
@@ -171,8 +171,8 @@ int main(int argc, char *argv[]) {
         printf("inconsistency in gen_sub_matrix for first matrix\n");
         exit(1);
     }
-    printf("Begin first print for %i\n", rankme);
-    debug_print_matrix(au, xdim_size, ydim_size, rankme);
+//    printf("Begin first print for %i\n", rankme);
+//    debug_print_matrix(au, xdim_size, ydim_size, rankme);
     for (int matrixnum = 1; matrixnum < num_arg_matrices; ++matrixnum) {
         if (gen_sub_matrix(rankme, test_set, matrixnum, bu,
                            mystarty, mystarty + ydim_size - 1, 1,
@@ -181,8 +181,8 @@ int main(int argc, char *argv[]) {
             printf("inconsistency in gen_sub_matrix for %i matrix\n", matrixnum);
             exit(1);
         }
-        printf("Begin print for %i\n", rankme);
-        debug_print_matrix(bu, xdim_size, ydim_size, rankme);
+//        printf("Begin print for %i\n", rankme);
+//        debug_print_matrix(bu, xdim_size, ydim_size, rankme);
         for (int iteration = 0; iteration < dims[0]; ++iteration) {
 #ifdef DEBUG
             //            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
@@ -194,13 +194,13 @@ int main(int argc, char *argv[]) {
             MPI_Irecv(bi, matsize, MPI_DOUBLE,
                       rankleft, xtag, topocomm, &leftrecv);
             // do matrix multiply
-            printf("Begin printa for %i\n", rankme);
-            debug_print_matrix(au, xdim_size, ydim_size, rankme);
-            printf("Begin printb for %i\n", rankme);
-            debug_print_matrix(bu, xdim_size, ydim_size, rankme);
+//            printf("Begin printa for %i\n", rankme);
+//            debug_print_matrix(au, xdim_size, ydim_size, rankme);
+//            printf("Begin printb for %i\n", rankme);
+//            debug_print_matrix(bu, xdim_size, ydim_size, rankme);
             mm_kernel_accum(o, au, bu, xdim_size, ydim_size, (iteration + coords[0]) % dims[0], coords[0]);
-            printf("Begin printo for %i\n", rankme);
-            debug_print_matrix(o, xdim_size, ydim_size, rankme);
+//            printf("Begin printo for %i\n", rankme);
+//            debug_print_matrix(o, xdim_size, ydim_size, rankme);
 
             // finish send/receive
             MPI_Wait(&rightsend, MPI_STATUS_IGNORE);
@@ -212,23 +212,23 @@ int main(int argc, char *argv[]) {
         // assign output to a (b will be overwritten at top of loop)
         SWP(au, o)
         memset(o, 0, matsize * sizeof(double));
-        printf("Begin inter print for %i\n", rankme);
-        debug_print_matrix(au, xdim_size, ydim_size, rankme);
+//        printf("Begin inter print for %i\n", rankme);
+//        debug_print_matrix(au, xdim_size, ydim_size, rankme);
     }
     o = au;
-    printf("Begin final print for %i\n", rankme);
-    debug_print_matrix(o, xdim_size, ydim_size, rankme);
+//    printf("Begin final print for %i\n", rankme);
+//    debug_print_matrix(o, xdim_size, ydim_size, rankme);
     double accum = matrix_sum(o, xdim_size, ydim_size);
-    printf("%i local sum %f\n", rankme, accum);
+//    printf("%i local sum %f\n", rankme, accum);
     MPI_Gather(&accum, 1, MPI_DOUBLE, ai, 1, MPI_DOUBLE, rankmonarch, MPI_COMM_WORLD);
-    printf("I am %i and monarch is %i\n", rankme, rankmonarch);
+//    printf("I am %i and monarch is %i\n", rankme, rankmonarch);
     if (ammonarch) {
-        printf("Begin ai print\n");
-        debug_print_matrix(ai, dims[0], 1, 100+rankme);
+//        printf("Begin ai print\n");
+//        debug_print_matrix(ai, dims[0], 1, 100+rankme);
         double newaccum = matrix_sum(ai, dims[0], 1);
         printf("Reduce sum %f\n", newaccum);
     } else {
-        printf("I'm done %i\n", rankme);
+        //printf("I'm done %i\n", rankme);
     }
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Finalize();
