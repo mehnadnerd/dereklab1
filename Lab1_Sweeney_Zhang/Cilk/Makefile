@@ -1,0 +1,19 @@
+WORKERS := 1
+
+run_debug: cilk
+	CILK_NWORKERS=$(WORKERS) ./test_mm 0 0 100
+
+run_performance: cilk
+	CILK_NWORKERS=$(WORKERS) ./test_mm 1 0 100
+
+all:
+	test_mm
+
+clean:
+	rm *~; rm *.exe
+
+dcilk:
+	/scratch/04347/marui/cilk/build/bin/clang -fopencilk -I/scratch/04347/marui/cilk/build/lib/clang/14.0.6/include/cilk/ -fsanitize=cilk -Og -g -O3 cilk_mm.c gen_matrix.c my_malloc.c -o test_mm
+
+cilk:
+	/scratch/04347/marui/cilk/build/bin/clang -fopencilk -O3 -mno-mmx -mno-avx -fno-tree-vectorize -I/scratch/04347/marui/cilk/build/lib/clang/14.0.6/include/cilk/ cilk_mm.c gen_matrix.c my_malloc.c -o test_mm
