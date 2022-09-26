@@ -111,7 +111,7 @@ double *gen_sub_matrix(
         exit(1);
     }
 
-    if (!row_major_p) {
+    if (row_major_p) {
         for (y = y_lo; y <= y_hi; y += y_stride) {
             for (x = x_lo; x <= x_hi; x += x_stride) {
                 result[i++] = gen_one_element(test_set, matrix_num, x, y);
