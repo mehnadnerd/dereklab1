@@ -93,8 +93,15 @@ int main(int argc, char *argv[]) {
     matrix_dimension_size = atoi(argv[3]);
     num_arg_matrices = init_gen_sub_matrix(test_set);
 
-    int xdim = 32; // number from ass
-    int ydim = 32;
+    int xdim, ydim;
+    if (matrix_dimension_size < 32) {
+        xdim = 2;
+        ydim = 2;
+    }
+    else {
+        xdim = 32; // number from ass
+        ydim = 32;
+    }
 
     //stolen from https://web.cels.anl.gov/~thakur/sc16-mpi-tutorial/slides.pdf
 
@@ -130,6 +137,15 @@ int main(int argc, char *argv[]) {
         printf("inconsistency in gen_sub_matrix for first matrix\n");
         exit(1);
     }
+    if (debug_perf == 0) {
+        printf("argument matrix 0\n");
+        for (int i = 0; i < matrix_dimension_size; i++) {
+            for (int j = 0; j < matrix_dimension_size; j++) {
+                printf("%lf ", a[i*matrix_dimension_size + j]);
+            }
+            printf("\n");
+        }
+    }
 //    printf("Begin first print for %i\n", rankme);
 //    debug_print_matrix(au, xdim_size, ydim_size, rankme);
     for (int matrixnum = 1; matrixnum < num_arg_matrices; ++matrixnum) {
@@ -139,6 +155,15 @@ int main(int argc, char *argv[]) {
             NULL) {
             printf("inconsistency in gen_sub_matrix for %i matrix\n", matrixnum);
             exit(1);
+        }
+        if (debug_perf == 0) {
+            printf("argument matrix %d\n", matrixnum);
+            for (int i = 0; i < matrix_dimension_size; i++) {
+                for (int j = 0; j < matrix_dimension_size; j++) {
+                    printf("%lf ", b[j*matrix_dimension_size + i]);
+                }
+                printf("\n");
+            }
         }
         for (int i = 0; i < xdim; ++i) {
             for (int j = 0; j < ydim; ++j) {
@@ -152,7 +177,18 @@ int main(int argc, char *argv[]) {
 //        print_matrix(b, matrix_dimension_size, matrix_dimension_size);
     }
     o = a;
-    double accum = matrix_sum(o, matrix_dimension_size, matrix_dimension_size);
-    printf("result sum %f\n", accum);
+    if (debug_perf == 0) {
+        printf("result matrix\n");
+        for (int i = 0; i < matrix_dimension_size; i++) {
+            for (int j = 0; j < matrix_dimension_size; j++) {
+                printf("%lf ", o[i*matrix_dimension_size + j]);
+            }
+            printf("\n");
+        }
+    }
+    else {
+        double accum = matrix_sum(o, matrix_dimension_size, matrix_dimension_size);
+        printf("result sum %f\n", accum);
+    }
     return 0;
 }
