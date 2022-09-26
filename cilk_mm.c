@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <cilk.h>
+//#include <cilk.h>
 #include <stdbool.h>
 #include <string.h>
 #include "gen_matrix.h"
@@ -50,6 +50,7 @@ void mm_kernel_accum_cilq(
                 r += a[y * fullsize + k] * b[x * fullsize + k];
             }
             result[y * fullsize + x] = r;
+//            printf("%i %i %f\n", x, y, r);
         }
     }
 }
@@ -92,8 +93,8 @@ int main(int argc, char *argv[]) {
     matrix_dimension_size = atoi(argv[3]);
     num_arg_matrices = init_gen_sub_matrix(test_set);
 
-    int xdim = 16; // number from ass
-    int ydim = 16;
+    int xdim = 2; // number from ass
+    int ydim = 2;
 
     //stolen from https://web.cels.anl.gov/~thakur/sc16-mpi-tutorial/slides.pdf
 
@@ -141,11 +142,17 @@ int main(int argc, char *argv[]) {
         }
         for (int i = 0; i < xdim; ++i) {
             for (int j = 0; j < ydim; ++j) {
+                // cilk_spawn
                 mm_kernel_accum_cilq(o, a, b, matrix_dimension_size, xdim_size, ydim_size, i, j);
             }
         }
         //cilk_sync;
+        SWP(o, a)
+        memset(o, 0, matrix_dimension_size * matrix_dimension_size * sizeof(double ));
+//        print_matrix(a, matrix_dimension_size, matrix_dimension_size);
+//        print_matrix(b, matrix_dimension_size, matrix_dimension_size);
     }
+    o = a;
     double accum = matrix_sum(o, matrix_dimension_size, matrix_dimension_size);
     printf("result sum %f\n", accum);
     return 0;
