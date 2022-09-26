@@ -94,7 +94,11 @@ int main(int argc, char *argv[]) {
     num_arg_matrices = init_gen_sub_matrix(test_set);
 
     int xdim, ydim;
-    if ((matrix_dimension_size >= 64) && (matrix_dimension_size%64 == 0)) {
+    if ((matrix_dimension_size >= 128) && (matrix_dimension_size%128 == 0)) {
+        xdim = 128;
+        ydim = 128;
+    }
+    else if ((matrix_dimension_size >= 64) && (matrix_dimension_size%64 == 0)) {
         xdim = 64;
         ydim = 64;
     }
