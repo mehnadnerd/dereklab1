@@ -1,23 +1,17 @@
 test_mm: test_mm.c gen_matrix.c my_malloc.c gen_matrix.h my_malloc.h Makefile
-	mpicc -g -DDEBUG test_mm.c gen_matrix.c my_malloc.c -o test_mm
+	mpicc -g -DDEBUG -Werror -O3 -mno-mmx -mno-avx -mno-sse2 -fno-tree-vectorize test_mm.c gen_matrix.c my_malloc.c -o test_mm
 
-bmm: bmm.c gen_matrix.c my_malloc.c gen_matrix.h my_malloc.h Makefile
-	mpicc -g -DDEBUG -Werror -O3 -Ofast -ffast-math bmm.c gen_matrix.c my_malloc.c -o test_mm
+asan: test_mm.c gen_matrix.c my_malloc.c gen_matrix.h my_malloc.h Makefile
+	mpicc -fsanitize=address -g -DDEBUG -Werror -O0 test_mm.c gen_matrix.c my_malloc.c -o test_mm
 
-asan: bmm.c gen_matrix.c my_malloc.c gen_matrix.h my_malloc.h Makefile
-	mpicc -fsanitize=address -g -DDEBUG -Werror -O0 bmm.c gen_matrix.c my_malloc.c -o test_mm
+run_debug: test_mm
+	./test_mm 0 0 100
 
-cmm: cmm.c gen_matrix.c my_malloc.c gen_matrix.h my_malloc.h Makefile
-	mpicc -g -DDEBUG -Wall -Werror -O3 -Ofast -ffast-math -march=native cmm.c gen_matrix.c my_malloc.c -o test_mm
-
-run_debug: cmm
-	./test_mm 0 0 4
-
-run_performance: cmm
+run_performance: test_mm
 	./test_mm 1 0 100
 
 all:
-	cmm
+	test_mm
 
 clean:
 	rm *~; rm *.exe

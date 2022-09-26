@@ -117,7 +117,7 @@ double *gen_sub_matrix(
                 result[i++] = gen_one_element(test_set, matrix_num, x, y);
             }
         }
-    } else { // column major
+    } else {
         for (x = x_lo; x <= x_hi; x += x_stride) {
             for (y = y_lo; y <= y_hi; y += y_stride) {
                 result[i++] = gen_one_element(test_set, matrix_num, x, y);
