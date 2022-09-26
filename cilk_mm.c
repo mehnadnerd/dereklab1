@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-//#include <cilk.h>
+#include <cilk.h>
 #include <stdbool.h>
 #include <string.h>
 #include "gen_matrix.h"
@@ -93,8 +93,8 @@ int main(int argc, char *argv[]) {
     matrix_dimension_size = atoi(argv[3]);
     num_arg_matrices = init_gen_sub_matrix(test_set);
 
-    int xdim = 2; // number from ass
-    int ydim = 2;
+    int xdim = 32; // number from ass
+    int ydim = 32;
 
     //stolen from https://web.cels.anl.gov/~thakur/sc16-mpi-tutorial/slides.pdf
 
@@ -142,11 +142,10 @@ int main(int argc, char *argv[]) {
         }
         for (int i = 0; i < xdim; ++i) {
             for (int j = 0; j < ydim; ++j) {
-                // cilk_spawn
-                mm_kernel_accum_cilq(o, a, b, matrix_dimension_size, xdim_size, ydim_size, i, j);
+                cilk_spawn mm_kernel_accum_cilq(o, a, b, matrix_dimension_size, xdim_size, ydim_size, i, j);
             }
         }
-        //cilk_sync;
+        cilk_sync;
         SWP(o, a)
         memset(o, 0, matrix_dimension_size * matrix_dimension_size * sizeof(double ));
 //        print_matrix(a, matrix_dimension_size, matrix_dimension_size);
