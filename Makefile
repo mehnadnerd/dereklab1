@@ -15,3 +15,9 @@ all:
 
 clean:
 	rm *~; rm *.exe
+
+dcilk:
+	/scratch/04347/marui/cilk/build/bin/clang -fopencilk -fsanitize=cilk -Og -g -O3 cilk_mm.c gen_matrix.c my_malloc.c -o test_mm
+
+cilk:
+	/scratch/04347/marui/cilk/build/bin/clang -fopencilk -O3 cilk_mm.c gen_matrix.c my_malloc.c -o test_mm

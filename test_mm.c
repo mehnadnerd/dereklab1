@@ -243,10 +243,6 @@ int main(int argc, char *argv[]) {
 //        printf("Begin print for %i\n", rankme);
 //        debug_print_matrix(bu, xdim_size, ydim_size, rankme);
         for (int iteration = 0; iteration < dims[0]; ++iteration) {
-#ifdef DEBUG
-            //            printf("matrixnum %i rank %i iteration %i\n", matrixnum, rankme, iteration);
-            //            fflush(stdout);
-#endif
             // start to send/receive
             MPI_Isend(bu, matsize, MPI_DOUBLE,
                       rankright, xtag, topocomm, &rightsend);
@@ -307,11 +303,11 @@ int main(int argc, char *argv[]) {
         }
     }
     else {
-        if (ammonarch) {
-            double accum = matrix_sum(o, xdim_size, ydim_size);
+        double accum = matrix_sum(o, xdim_size, ydim_size);
 //          printf("%i local sum %f\n", rankme, accum);
-            MPI_Gather(&accum, 1, MPI_DOUBLE, ai, 1, MPI_DOUBLE, rankmonarch, MPI_COMM_WORLD);
+        MPI_Gather(&accum, 1, MPI_DOUBLE, ai, 1, MPI_DOUBLE, rankmonarch, MPI_COMM_WORLD);
 //          printf("I am %i and monarch is %i\n", rankme, rankmonarch);
+        if (ammonarch) {
 //          printf("Begin ai print\n");
 //          debug_print_matrix(ai, dims[0], 1, 100+rankme);
             double newaccum = matrix_sum(ai, dims[0], 1);
